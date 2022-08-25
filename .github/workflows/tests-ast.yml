@@ -1,0 +1,68 @@
+name: Reference Python Package
+
+on:
+  [push, pull_request]
+
+jobs:
+  tests:
+    name: OpenPulse AST tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+        antlr-version: ['4.9.2']
+    defaults:
+      run:
+        working-directory: source/openpulse
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '15'
+          distribution: 'adopt'
+
+      - name: Update pip
+        run: python -mpip install --upgrade pip
+
+      - name: Install ANTLR4
+        working-directory: .
+        run: curl -O https://www.antlr.org/download/antlr-${{ matrix.antlr-version }}-complete.jar
+
+      - name: Install ANTLR4 Python runtime
+        run: python -mpip install antlr4-python3-runtime==${{ matrix.antlr-version }}
+
+      - name: Generate openqasm3 grammar
+        working-directory: openqasm/source/grammar
+        run: java -Xmx500M -jar ../../../antlr-${{ matrix.antlr-version }}-complete.jar -o ../openqasm/openqasm3/antlr -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
+
+      - name: Install Python dependencies
+        working-directory: openqasm/source/openpulse
+        run: python -mpip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Build openqasm3 package
+        run: python -mpip install -e .[all]
+
+      - name: Generate openpulse grammar
+        working-directory: source/grammar
+        run: java -Xmx500M -jar ../../antlr-${{ matrix.antlr-version }}-complete.jar -lib ../../openqasm/source/grammar -o ../openpulse/openpulse/antlr -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
+
+      - name: Check openpulse format
+        run: black --check --diff openpulse tests
+
+      - name: Check openpulse style
+        working-directory: source/openpulse/openpulse
+        run: pylint .
+
+      - name: Check openpulse tests style
+        working-directory: source/openpulse/tests
+        run: pylint .
+
+      - name: Run openpulse tests
+        run: pytest -vv --color=yes tests
