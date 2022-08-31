@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 from contextlib import contextmanager
-from typing import List
+from typing import List, Optional
 
 try:
     from antlr4 import CommonTokenStream, InputStream, ParserRuleContext
@@ -34,17 +34,20 @@ except ImportError as exc:
         " such as by 'pip install openqasm3[parser]'."
     ) from exc
 
+import openpulse.ast as openpulse_ast
+from openqasm3.antlr.qasm3Parser import qasm3Parser
+from openqasm3 import ast
 from openqasm3.parser import (
     span,
     QASMNodeVisitor,
     _raise_from_context,
+    parse as parse_qasm3,
 )
-from openqasm3.antlr.qasm3Parser import qasm3Parser
+from openqasm3.visitor import QASMVisitor
 
 from .antlr.openpulseLexer import openpulseLexer
 from .antlr.openpulseParser import openpulseParser
 from .antlr.openpulseParserVisitor import openpulseParserVisitor
-from . import ast
 
 
 def parse(input_: str) -> ast.Program:
@@ -54,13 +57,22 @@ def parse(input_: str) -> ast.Program:
     :param input_: A string containing a complete OpenQASM 3 program.
     :return: A complete :obj:`~ast.Program` node.
     """
+    qasm3_ast = parse_qasm3(input_)
+    CalParser().visit(qasm3_ast)
+    return qasm3_ast
+
+
+def parse_openpulse(input_: str) -> openpulse_ast.CalibrationBlock:
     lexer = openpulseLexer(InputStream(input_))
     stream = CommonTokenStream(lexer)
     parser = openpulseParser(stream)
-
-    tree = parser.program()
-
-    return OpenPulseNodeVisitor().visitProgram(tree)
+    tree = parser.calibrationBlock()
+    result = (
+        OpenPulseNodeVisitor().visitCalibrationBlock(tree)
+        if tree.children
+        else openpulse_ast.CalibrationBlock(body=[])
+    )
+    return result
 
 
 class OpenPulseNodeVisitor(openpulseParserVisitor):
@@ -112,78 +124,27 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
             for scope in reversed(self._current_context())
         )
 
-    def _in_defcal(self):
-        return isinstance(self._current_base_scope(), openpulseParser.DefcalStatementContext)
-
     @span
     def _visitPulseType(self, ctx: openpulseParser.ScalarTypeContext):
         if ctx.WAVEFORM():
-            return ast.WaveformType()
+            return openpulse_ast.WaveformType()
         if ctx.PORT():
-            return ast.PortType()
+            return openpulse_ast.PortType()
         if ctx.FRAME():
-            return ast.FrameType()
+            return openpulse_ast.FrameType()
 
     @span
-    def visitArrayLiteral(self, ctx: openpulseParser.ArrayLiteralContext):
-        array_literal_element = (
-            openpulseParser.ExpressionContext,
-            openpulseParser.ArrayLiteralContext,
-        )
-
-        def predicate(child):
-            return isinstance(child, array_literal_element)
-
-        return ast.ArrayLiteral(
-            values=[self.visit(element) for element in ctx.getChildren(predicate=predicate)],
-        )
-
-    def visitCalibrationGrammarStatement(
-        self, ctx: openpulseParser.CalibrationGrammarStatementContext
-    ):
-        assert (
-            ctx.StringLiteral().getText() == '"openpulse"'
-        ), "Expected 'openpulse' as the calibration grammar"
-        return QASMNodeVisitor.visitCalibrationGrammarStatement(self, ctx)
-
-    @span
-    def visitCalStatement(self, ctx: openpulseParser.CalStatementContext):
-        return ast.CalibrationStatement(
-            body=[self.visit(statement) for statement in ctx.statement()]
-        )
+    def visitCalibrationBlock(self, ctx: openpulseParser.CalibrationBlockContext):
+        with self._push_context(ctx):
+            return openpulse_ast.CalibrationBlock(
+                body=[self.visit(statement) for statement in ctx.openpulseStatement()]
+            )
 
     def visitScalarType(self, ctx: openpulseParser.ScalarTypeContext):
         if ctx.WAVEFORM() or ctx.PORT() or ctx.FRAME():
             return self._visitPulseType(ctx)
         else:
             return QASMNodeVisitor.visitScalarType(self, ctx)
-
-    @span
-    def visitDefcalStatement(self, ctx: openpulseParser.DefcalStatementContext):
-        # We overide this method in QASMNodeVisitor.visitCalibrationDefinition as we have a
-        # concrete pulse grammar.
-        with self._push_context(ctx):
-            statements = [self.visit(statement) for statement in ctx.statement()]
-        arguments = (
-            [
-                self.visit(argument)
-                for argument in ctx.defcalArgumentDefinitionList().defcalArgumentDefinition()
-            ]
-            if ctx.defcalArgumentDefinitionList()
-            else []
-        )
-        qubits = [self.visit(operand) for operand in ctx.defcalOperandList().defcalOperand() or []]
-        return_type = (
-            self.visit(ctx.returnSignature().scalarType()) if ctx.returnSignature() else None
-        )
-
-        return ast.CalibrationDefinition(
-            name=self.visit(ctx.defcalTarget()),
-            arguments=arguments,
-            qubits=qubits,
-            return_type=return_type,
-            body=statements,
-        )
 
     def visitIndexOperator(self, ctx: openpulseParser.IndexOperatorContext):
         if ctx.setExpression():
@@ -225,8 +186,6 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
 
     @span
     def visitReturnStatement(self, ctx: qasm3Parser.ReturnStatementContext):
-        if not self._in_subroutine() and not self._in_defcal():
-            _raise_from_context(ctx, "'return' statement outside subroutine or defcal")
         if ctx.expression():
             expression = self.visit(ctx.expression())
         elif ctx.measureExpression():
@@ -237,7 +196,7 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
 
 
 # Reuse some QASMNodeVisitor methods in OpenPulseNodeVisitor
-# The following methods are overridden in OpenPulseNodeVisitor and thuys not imported:
+# The following methods are overridden in OpenPulseNodeVisitor and thus not imported:
 """
     "visitChildren",
     "visitErrorNode",
@@ -322,3 +281,19 @@ OpenPulseNodeVisitor.visitStatement = QASMNodeVisitor.visitStatement
 OpenPulseNodeVisitor.visitStatementOrScope = QASMNodeVisitor.visitStatementOrScope
 OpenPulseNodeVisitor.visitUnaryExpression = QASMNodeVisitor.visitUnaryExpression
 OpenPulseNodeVisitor.visitWhileStatement = QASMNodeVisitor.visitWhileStatement
+
+
+class CalParser(QASMVisitor[None]):
+    """Visit OpenQASM3 AST and pase calibration"""
+
+    def visit_CalibrationDefinition(
+        self, node: ast.CalibrationDefinition
+    ) -> openpulse_ast.CalibrationDefinition:
+        node.__class__ = openpulse_ast.CalibrationDefinition
+        node.body = parse_openpulse(node.body).body
+
+    def visit_CalibrationStatement(
+        self, node: ast.CalibrationStatement
+    ) -> openpulse_ast.CalibrationStatement:
+        node.__class__ = openpulse_ast.CalibrationStatement
+        node.body = parse_openpulse(node.body).body

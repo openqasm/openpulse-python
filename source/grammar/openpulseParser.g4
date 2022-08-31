@@ -11,9 +11,33 @@ options {
     tokenVocab = openpulseLexer;
 }
 
-/**** OpenQASM3.0 overrides ****/
-calStatement: CAL LBRACE statement* RBRACE;
-defcalStatement: DEFCAL defcalTarget (LPAREN defcalArgumentDefinitionList? RPAREN)? defcalOperandList returnSignature? LBRACE statement* RBRACE;
+calibrationBlock: openpulseStatement*;
+
+openpulseStatement:
+    // Statements can be used in the cal or defcal body
+    aliasDeclarationStatement
+    | assignmentStatement
+    | barrierStatement
+    | boxStatement
+    | breakStatement
+    | classicalDeclarationStatement
+    | constDeclarationStatement
+    | continueStatement
+    | defStatement
+    | delayStatement
+    | endStatement
+    | expressionStatement
+    | externStatement
+    | forStatement
+    | gateCallStatement
+    | ifStatement
+    | includeStatement
+    | ioDeclarationStatement
+    | quantumDeclarationStatement
+    | resetStatement
+    | returnStatement
+    | whileStatement
+    ;
 
 /** In the following we extend existing OpenQASM nodes. Need to refresh whenever OpenQASM is updated. **/
 // We extend the scalarType with WAVEFORM, PORT and FRAME

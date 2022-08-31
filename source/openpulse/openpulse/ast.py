@@ -41,6 +41,15 @@ class FrameType(ClassicalType):
     """
 
 
+@dataclass
+class CalibrationBlock(QASMNode):
+    """
+    Node representing a calibration block.
+    """
+
+    body: List[Statement]
+
+
 # Override the class from openqasm3
 @dataclass
 class CalibrationStatement(Statement):
