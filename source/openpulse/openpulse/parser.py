@@ -62,13 +62,13 @@ def parse(input_: str) -> ast.Program:
     return qasm3_ast
 
 
-def parse_openpulse(input_: str) -> openpulse_ast.CalibrationBlock:
+def parse_openpulse(input_: str, in_defcal: bool) -> openpulse_ast.CalibrationBlock:
     lexer = openpulseLexer(InputStream(input_))
     stream = CommonTokenStream(lexer)
     parser = openpulseParser(stream)
     tree = parser.calibrationBlock()
     result = (
-        OpenPulseNodeVisitor().visitCalibrationBlock(tree)
+        OpenPulseNodeVisitor(in_defcal).visitCalibrationBlock(tree)
         if tree.children
         else openpulse_ast.CalibrationBlock(body=[])
     )
@@ -78,13 +78,14 @@ def parse_openpulse(input_: str) -> openpulse_ast.CalibrationBlock:
 class OpenPulseNodeVisitor(openpulseParserVisitor):
     """Base class for the visitor of the OpenPulse AST."""
 
-    def __init__(self):
+    def __init__(self, in_defcal: bool):
         # A stack of "contexts", each of which is a stack of "scopes".  Contexts
         # are for the main program, gates and subroutines, while scopes are
         # loops, if/else and manual scoping constructs.  Each "context" always
         # contains at least one scope: the base ``ParserRuleContext`` that
         # opened it.
         self._contexts: List[List[ParserRuleContext]] = []
+        self._in_defcal = in_defcal
 
     @contextmanager
     def _push_context(self, ctx: ParserRuleContext):
@@ -186,6 +187,9 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
 
     @span
     def visitReturnStatement(self, ctx: qasm3Parser.ReturnStatementContext):
+        if not (self._in_subroutine() or self._in_defcal):
+            _raise_from_context(ctx, "'return' statement outside subroutine or defcal")
+
         if ctx.expression():
             expression = self.visit(ctx.expression())
         elif ctx.measureExpression():
@@ -290,10 +294,10 @@ class CalParser(QASMVisitor[None]):
         self, node: ast.CalibrationDefinition
     ) -> openpulse_ast.CalibrationDefinition:
         node.__class__ = openpulse_ast.CalibrationDefinition
-        node.body = parse_openpulse(node.body).body
+        node.body = parse_openpulse(node.body, in_defcal=True).body
 
     def visit_CalibrationStatement(
         self, node: ast.CalibrationStatement
     ) -> openpulse_ast.CalibrationStatement:
         node.__class__ = openpulse_ast.CalibrationStatement
-        node.body = parse_openpulse(node.body).body
+        node.body = parse_openpulse(node.body, in_defcal=False).body

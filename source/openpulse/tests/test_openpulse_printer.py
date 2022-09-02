@@ -1,6 +1,7 @@
 import textwrap
 
 import pytest
+
 from openpulse.parser import parse
 from openpulse.printer import dumps
 
