@@ -24,6 +24,7 @@ __all__ = [
 ]
 
 from contextlib import contextmanager
+import inspect
 from typing import List, Optional
 
 try:
@@ -49,6 +50,8 @@ from .antlr.openpulseLexer import openpulseLexer
 from .antlr.openpulseParser import openpulseParser
 from .antlr.openpulseParserVisitor import openpulseParserVisitor
 
+# patch some antlr generated openpulseParser classes to pass qasm3Parser isinstance check
+openpulseParser.ExpressionContext.__bases__ = (qasm3Parser.ExpressionContext,)
 
 def parse(input_: str) -> ast.Program:
     """
@@ -73,6 +76,7 @@ def parse_openpulse(input_: str, in_defcal: bool) -> openpulse_ast.CalibrationBl
         else openpulse_ast.CalibrationBlock(body=[])
     )
     return result
+
 
 
 class OpenPulseNodeVisitor(openpulseParserVisitor):
@@ -162,30 +166,6 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
         return [self.visit(child) for child in ctx.getChildren(predicate=predicate)]
 
     @span
-    def visitRangeExpression(self, ctx: openpulseParser.RangeExpressionContext):
-        # start, end and step are all optional as in [:]
-        # It could be [start:end] or [start:step:end]
-        start = None
-        end = None
-        step = None
-        colons_seen = 0
-
-        for child in ctx.getChildren():
-            if isinstance(child, openpulseParser.ExpressionContext):
-                expression = self.visit(child)
-                if colons_seen == 0:
-                    start = expression
-                elif colons_seen == 1:
-                    end = expression
-                else:
-                    step = end
-                    end = expression
-            elif child.getText() == ":":
-                colons_seen += 1
-
-        return ast.RangeDefinition(start=start, end=end, step=step)
-
-    @span
     def visitReturnStatement(self, ctx: qasm3Parser.ReturnStatementContext):
         if not (self._in_subroutine() or self._in_defcal):
             _raise_from_context(ctx, "'return' statement outside subroutine or defcal")
@@ -202,15 +182,7 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
 # Reuse some QASMNodeVisitor methods in OpenPulseNodeVisitor
 # The following methods are overridden in OpenPulseNodeVisitor and thus not imported:
 """
-    "visitChildren",
-    "visitErrorNode",
-    "visitTerminal",
-    "visitArrayLiteral",
-    "visitCalibrationGrammarStatement",
-    "visitCalStatement",
-    "visitDefcalStatement",
     "visitIndexOperator",
-    "visitRangeExpression",
     "visitReturnStatement",
     "visitScalarType",
 """
@@ -278,6 +250,7 @@ OpenPulseNodeVisitor.visitProgram = QASMNodeVisitor.visitProgram
 OpenPulseNodeVisitor.visitQuantumDeclarationStatement = (
     QASMNodeVisitor.visitQuantumDeclarationStatement
 )
+OpenPulseNodeVisitor.visitRangeExpression = QASMNodeVisitor.visitRangeExpression
 OpenPulseNodeVisitor.visitResetStatement = QASMNodeVisitor.visitResetStatement
 OpenPulseNodeVisitor.visitScope = QASMNodeVisitor.visitScope
 OpenPulseNodeVisitor.visitSetExpression = QASMNodeVisitor.visitSetExpression
