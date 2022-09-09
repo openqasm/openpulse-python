@@ -7,8 +7,8 @@ It reuses the classical types and statements from `openqasm3`.
 
 ### Working with submodule
 
-The `openpulse` package depends on the `openqasm3` package. This repo references the 
-[OpenQASM](https://github.com/openqasm/openqasm) repo as submodule.
+The `openpulse` repo depends on the antlr grammar in  
+[OpenQASM](https://github.com/openqasm/openqasm) repo. It references OpenQASM as submodule.
 
 To clone `openpulse`, run:
 
@@ -22,26 +22,13 @@ If you forgot `--recurse-submodules` during initial cloning, you can run:
 git submodule update --init --recursive
 ```
 
-### Build and install openqasm3
-
-We assume that you have already installed `Antlr4` tools following `openqasm/source/openqasm/README.md`
-and set up an Python virtual environment for this project. 
-
-You will need to build and install `openqasm3` first. Change to the `openqasm/source/grammar` 
-directory and run:
-
-```
-antlr4 -o ../openqasm/openqasm3/antlr -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
-```
-
-Then change to the `openqasm/source/openqasm` directory and run:
-
-```
-python -mpip install -r requirements.txt -r requirements-dev.txt
-python -mpip install -e ".[all]"
-```
-
 ### Working with openpulse
+
+To install dependencies, change to `source/openpulse` directory and run:
+
+```
+python -m pip install -r requirements.txt -r requirements-dev.txt
+```
 
 Now build the `openpulse` grammar. Change to the `source/grammar` directory and run:
 
