@@ -53,6 +53,7 @@ from .antlr.openpulseParserVisitor import openpulseParserVisitor
 # patch some antlr generated openpulseParser classes to pass qasm3Parser isinstance check
 openpulseParser.ExpressionContext.__bases__ = (qasm3Parser.ExpressionContext,)
 
+
 def parse(input_: str) -> ast.Program:
     """
     Parse a complete OpenPulse program from a string.
@@ -76,7 +77,6 @@ def parse_openpulse(input_: str, in_defcal: bool) -> openpulse_ast.CalibrationBl
         else openpulse_ast.CalibrationBlock(body=[])
     )
     return result
-
 
 
 class OpenPulseNodeVisitor(openpulseParserVisitor):
