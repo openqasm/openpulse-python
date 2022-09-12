@@ -1,3 +1,0 @@
-[submodule "openqasm"]
-	path = openqasm
-	url = https://github.com/openqasm/openqasm.git

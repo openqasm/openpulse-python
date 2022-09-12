@@ -46,7 +46,7 @@ jobs:
 
       - name: Generate openpulse grammar
         working-directory: source/grammar
-        run: java -Xmx500M -jar ../../antlr-${{ matrix.antlr-version }}-complete.jar -lib ../../openqasm/source/grammar -o ../openpulse/openpulse/antlr -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
+        run: java -Xmx500M -jar ../../antlr-${{ matrix.antlr-version }}-complete.jar -o ../openpulse/openpulse/antlr -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
 
       - name: Check openpulse format
         run: black --check --diff openpulse tests
