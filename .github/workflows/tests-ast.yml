@@ -40,21 +40,13 @@ jobs:
       - name: Install ANTLR4 Python runtime
         run: python -mpip install antlr4-python3-runtime==${{ matrix.antlr-version }}
 
-      - name: Generate openqasm3 grammar
-        working-directory: openqasm/source/grammar
-        run: java -Xmx500M -jar ../../../antlr-${{ matrix.antlr-version }}-complete.jar -o ../openqasm/openqasm3/antlr -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
-
       - name: Install Python dependencies
-        working-directory: openqasm/source/openqasm
+        working-directory: source/openpulse
         run: python -mpip install -r requirements.txt -r requirements-dev.txt
-
-      - name: Build openqasm3 package
-        working-directory: openqasm/source/openqasm
-        run: python -mpip install -e .[all]
 
       - name: Generate openpulse grammar
         working-directory: source/grammar
-        run: java -Xmx500M -jar ../../antlr-${{ matrix.antlr-version }}-complete.jar -lib ../../openqasm/source/grammar -o ../openpulse/openpulse/antlr -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
+        run: java -Xmx500M -jar ../../antlr-${{ matrix.antlr-version }}-complete.jar -o ../openpulse/openpulse/antlr -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
 
       - name: Check openpulse format
         run: black --check --diff openpulse tests
