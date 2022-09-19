@@ -265,7 +265,7 @@ def test_calibration2():
         cal {
             array[int[32], 3] my_ints = {5, 6, 7};
         }
-        """
+        """,
     ],
 )
 def test_parsing(p: str):
