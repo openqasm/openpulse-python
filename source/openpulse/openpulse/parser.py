@@ -213,6 +213,7 @@ OpenPulseNodeVisitor.visitAliasDeclarationStatement = QASMNodeVisitor.visitAlias
 OpenPulseNodeVisitor.visitAliasExpression = QASMNodeVisitor.visitAliasExpression
 OpenPulseNodeVisitor.visitAnnotation = QASMNodeVisitor.visitAnnotation
 OpenPulseNodeVisitor.visitArgumentDefinition = QASMNodeVisitor.visitArgumentDefinition
+OpenPulseNodeVisitor.visitArrayLiteral = QASMNodeVisitor.visitArrayLiteral
 OpenPulseNodeVisitor.visitArrayType = QASMNodeVisitor.visitArrayType
 OpenPulseNodeVisitor.visitAssignmentStatement = QASMNodeVisitor.visitAssignmentStatement
 OpenPulseNodeVisitor.visitBarrierStatement = QASMNodeVisitor.visitBarrierStatement
