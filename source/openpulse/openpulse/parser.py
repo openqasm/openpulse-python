@@ -120,7 +120,11 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
     def _in_loop(self):
         return any(
             isinstance(
-                scope, (openpulseParser.ForStatementContext, openpulseParser.WhileStatementContext)
+                scope,
+                (
+                    openpulseParser.ForStatementContext,
+                    openpulseParser.WhileStatementContext,
+                ),
             )
             for scope in reversed(self._current_context())
         )
@@ -133,6 +137,20 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
             return openpulse_ast.PortType()
         if ctx.FRAME():
             return openpulse_ast.FrameType()
+
+    @span
+    def visitArrayLiteral(self, ctx: qasm3Parser.ArrayLiteralContext):
+        array_literal_element = (
+            openpulseParser.ExpressionContext,
+            openpulseParser.ArrayLiteralContext,
+        )
+
+        def predicate(child):
+            return isinstance(child, array_literal_element)
+
+        return ast.ArrayLiteral(
+            values=[self.visit(element) for element in ctx.getChildren(predicate=predicate)],
+        )
 
     @span
     def visitCalibrationBlock(self, ctx: openpulseParser.CalibrationBlockContext):
@@ -202,6 +220,7 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
 # Reuse some QASMNodeVisitor methods in OpenPulseNodeVisitor
 # The following methods are overridden in OpenPulseNodeVisitor and thus not imported:
 """
+    "visitArrayLiteral",
     "visitIndexOperator",
     "visitRangeExpression",
     "visitReturnStatement",
@@ -213,7 +232,6 @@ OpenPulseNodeVisitor.visitAliasDeclarationStatement = QASMNodeVisitor.visitAlias
 OpenPulseNodeVisitor.visitAliasExpression = QASMNodeVisitor.visitAliasExpression
 OpenPulseNodeVisitor.visitAnnotation = QASMNodeVisitor.visitAnnotation
 OpenPulseNodeVisitor.visitArgumentDefinition = QASMNodeVisitor.visitArgumentDefinition
-OpenPulseNodeVisitor.visitArrayLiteral = QASMNodeVisitor.visitArrayLiteral
 OpenPulseNodeVisitor.visitArrayType = QASMNodeVisitor.visitArrayType
 OpenPulseNodeVisitor.visitAssignmentStatement = QASMNodeVisitor.visitAssignmentStatement
 OpenPulseNodeVisitor.visitBarrierStatement = QASMNodeVisitor.visitBarrierStatement

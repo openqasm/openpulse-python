@@ -7,6 +7,8 @@ from openqasm3.visitor import QASMVisitor
 from openpulse.parser import parse
 from openpulse.ast import (
     AngleType,
+    ArrayLiteral,
+    ArrayType,
     CalibrationDefinition,
     CalibrationStatement,
     ClassicalArgument,
@@ -94,7 +96,8 @@ def test_calibration_definition():
                                     arguments=[Identifier(name="$1")],
                                 ),
                                 UnaryExpression(
-                                    op=UnaryOperator["-"], expression=Identifier(name="theta")
+                                    op=UnaryOperator["-"],
+                                    expression=Identifier(name="theta"),
                                 ),
                             ],
                         )
@@ -194,7 +197,10 @@ def test_calibration2():
                         identifier=Identifier(name="readout_waveform_wf"),
                         init_expression=FunctionCall(
                             name=Identifier(name="constant"),
-                            arguments=[FloatLiteral(value=5e-06), FloatLiteral(value=0.03)],
+                            arguments=[
+                                FloatLiteral(value=5e-06),
+                                FloatLiteral(value=0.03),
+                            ],
                         ),
                     ),
                     ForInLoop(
@@ -222,6 +228,39 @@ def test_calibration2():
                             ),
                         ],
                     ),
+                ]
+            )
+        ]
+    )
+    SpanGuard().visit(program)
+
+
+def test_array():
+    p = """
+    cal {
+        array[int[32], 4] my_array = {3, 4, 5, 5};
+    }
+    """.strip()
+    program = parse(p)
+    assert _remove_spans(program) == Program(
+        statements=[
+            CalibrationStatement(
+                body=[
+                    ClassicalDeclaration(
+                        type=ArrayType(
+                            base_type=IntType(size=IntegerLiteral(value=32)),
+                            dimensions=[IntegerLiteral(value=4)],
+                        ),
+                        identifier=Identifier(name="my_array"),
+                        init_expression=ArrayLiteral(
+                            values=[
+                                IntegerLiteral(value=3),
+                                IntegerLiteral(value=4),
+                                IntegerLiteral(value=5),
+                                IntegerLiteral(value=5),
+                            ],
+                        ),
+                    )
                 ]
             )
         ]
@@ -259,11 +298,6 @@ def test_calibration2():
                     shift_scale(0.018000000000000002, xy_frame);
                 }
             }
-        }
-        """,
-        """
-        cal {
-            array[int[32], 3] my_ints = {5, 6, 7};
         }
         """,
     ],
