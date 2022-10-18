@@ -36,7 +36,7 @@ def main():
     with open(sys.argv[1], "r") as setup_file:
         contents = setup_file.read()
     new_contents, count = re.subn(
-        r"antlr4-python3-runtime\s*#\s*__ANTLR_VERSIONS__", constraint, contents
+        r"antlr4[-_]python3[-_]runtime\s*#\s*__ANTLR_VERSIONS__", constraint, contents
     )
     if not count:
         print("given setup.cfg file did not seem to contain an antlr4 dependency", file=sys.stderr)
