@@ -59,4 +59,4 @@ jobs:
           set -e
           source .venv/bin/activate
           python3 -mpip install -U twine
-          twine upload openpulse-*.whl openpulse-*.tar.gz
+          twine upload --repository testpypi openpulse-*.whl openpulse-*.tar.gz
