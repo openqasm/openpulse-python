@@ -14,13 +14,8 @@ With the ``[parser]`` extra installed, the simplest interface to the parser is
 the :obj:`~parser.parse` function.
 """
 
-__version__ = "0.2.5"
+__version__ = "0.4.0"
 
 from . import ast
-
-try:
-    from . import parser
-    from .parser import parse
-except ImportError:
-    # Installed without the parsing extra.
-    pass
+from . import parser
+from .parser import parse
