@@ -62,7 +62,7 @@ jobs:
             IFS=. read -ra version <<< "${version_string}"
             out_dir="${antlr_out_dir}/_${version[0]}_${version[1]}"
             mkdir -p "$out_dir"
-            java -Xmx500M -jar "${antlr_jar_dir}/antlr-${version_string}-complete.jar" -o "$out_dir" -Dlanguage=Python3 -visitor -visitor openpulseLexer.g4 openpulseParser.g4
+            java -Xmx500M -jar "${antlr_jar_dir}/antlr-${version_string}-complete.jar" -o "$out_dir" -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
           done
           popd
 
