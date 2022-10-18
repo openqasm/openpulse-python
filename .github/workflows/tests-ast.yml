@@ -4,49 +4,43 @@ on:
   [push, pull_request]
 
 jobs:
+  build:
+      uses: ./.github/workflows/build-ast.yml
   tests:
     name: OpenPulse AST tests
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
-        antlr-version: ['4.9.2']
+        # Just using minimum and maximum to avoid exploding the matrix.
+        python-version: ['3.7', '3.10']
+        antlr-version: ['4.7', '4.11']
     defaults:
       run:
         working-directory: source/openpulse
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
-          submodules: recursive
+          fetch-depth: 0
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions/setup-java@v2
+      - uses: actions/download-artifact@v3
         with:
-          java-version: '15'
-          distribution: 'adopt'
+          name: openpulse-python-wheel
+          path: ./source/openpulse/
 
-      - name: Update pip
-        run: python -mpip install --upgrade pip
-
-      - name: Install ANTLR4
-        working-directory: .
-        run: curl -O https://www.antlr.org/download/antlr-${{ matrix.antlr-version }}-complete.jar
-
-      - name: Install ANTLR4 Python runtime
-        run: python -mpip install antlr4-python3-runtime==${{ matrix.antlr-version }}
-
-      - name: Install Python dependencies
-        working-directory: source/openpulse
-        run: python -mpip install -r requirements.txt -r requirements-dev.txt
-
-      - name: Generate openpulse grammar
-        working-directory: source/grammar
-        run: java -Xmx500M -jar ../../antlr-${{ matrix.antlr-version }}-complete.jar -o ../openpulse/openpulse/antlr -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
+      - name: Install package
+        run: |
+          set -e
+          pip install --upgrade pip wheel
+          pip install -r requirements-dev.txt
+          pip install 'antlr4_python3_runtime==${{ matrix.antlr-version }}'
+          pip install "$(echo openpulse-*.whl)[all]"
 
       - name: Check openpulse format
         run: black --check --diff openpulse tests
@@ -60,4 +54,10 @@ jobs:
         run: pylint .
 
       - name: Run openpulse tests
-        run: pytest -vv --color=yes tests
+        run: |
+          # Swap into the testing directory so the imported `openpulse` is the
+          # wheel version not the current-directory version.  The
+          # `--import-mode=importlib` stops pytest from modifying the path to
+          # accidentally put the checked-out version (with no ANTLR) back.
+          cd tests
+          pytest -vv --color=yes --import-mode=importlib .

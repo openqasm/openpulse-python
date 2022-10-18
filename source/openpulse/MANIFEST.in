@@ -6,5 +6,5 @@ include requirements.txt
 include openpulse/py.typed
 
 # ANTLR-generated files.
-include openpulse/antlr/*.interp
-include openpulse/antlr/*.tokens
+graft openpulse/_antlr/_4_*/
+prune **/__pycache__/

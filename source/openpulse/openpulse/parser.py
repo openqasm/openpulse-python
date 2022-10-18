@@ -35,7 +35,7 @@ except ImportError as exc:
     ) from exc
 
 import openpulse.ast as openpulse_ast
-from openqasm3.antlr.qasm3Parser import qasm3Parser
+from openqasm3._antlr.qasm3Parser import qasm3Parser
 from openqasm3 import ast
 from openqasm3.parser import (
     span,
@@ -45,9 +45,9 @@ from openqasm3.parser import (
 )
 from openqasm3.visitor import QASMVisitor
 
-from .antlr.openpulseLexer import openpulseLexer
-from .antlr.openpulseParser import openpulseParser
-from .antlr.openpulseParserVisitor import openpulseParserVisitor
+from ._antlr.openpulseLexer import openpulseLexer
+from ._antlr.openpulseParser import openpulseParser
+from ._antlr.openpulseParserVisitor import openpulseParserVisitor
 
 
 def parse(input_: str) -> ast.Program:

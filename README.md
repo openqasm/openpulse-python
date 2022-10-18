@@ -18,7 +18,7 @@ https://github.com/openqasm/openqasm/tree/main/source/grammar into the `source/g
 Now build the `openpulse` grammar. Change to the `source/grammar` directory and run:
 
 ```
-antlr4 -o ../openpulse/openpulse/antlr -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
+antlr4 -o ../openpulse/openpulse/_antlr/_<major>_<minor> -Dlanguage=Python3 -visitor openpulseLexer.g4 openpulseParser.g4
 ```
 
 Finally, you can change to the `source/openpulse` directory and run:
