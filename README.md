@@ -26,3 +26,17 @@ Finally, you can change to the `source/openpulse` directory and run:
 ```
 pytest .
 ```
+
+## Deployment procedure
+
+The deployment is primarily managed by a GitHub Actions pipeline, triggered by a tag of the form `v<version>`.
+For example, for package version `0.4.0`, the tag should be `v0.4.0`.
+
+To deploy:
+
+1. create a PR that sets the version number of the package in `__init__.py` to what it should be.
+2. once the PR has merged, tag the merge commit (for example, `git fetch origin; git tag -m "Python AST 0.4.0" v0.4.0 origin/main`).
+3. push the tag to this repository (for example, `git push origin v0.4.0`).
+
+At this point, the deployment pipeline will take over and deploy the package to PyPI.
+You should be able to see the progress [in the Actions tab of this repository](https://github.com/openqasm/openpulse/actions/workflows/deploy-ast.yml).
