@@ -1,5 +1,6 @@
 antlr/
 build/
 dist/
+_antlr/
 
 docs/_build

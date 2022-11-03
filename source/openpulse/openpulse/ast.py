@@ -90,7 +90,7 @@ class CalibrationDefinition(Statement):
     """
 
     name: Identifier
-    arguments: List[ClassicalArgument]
+    arguments: List[Union[ClassicalArgument, Expression]]
     qubits: List[Identifier]
     return_type: Optional[ClassicalType]
     body: List[Statement]
