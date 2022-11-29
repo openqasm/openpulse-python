@@ -34,16 +34,14 @@ except ImportError as exc:
         " such as by 'pip install openqasm3[parser]'."
     ) from exc
 
-import openpulse.ast as openpulse_ast
-from openqasm3._antlr.qasm3Parser import qasm3Parser
 from openqasm3 import ast
-from openqasm3.parser import (
-    span,
-    QASMNodeVisitor,
-    _raise_from_context,
-    parse as parse_qasm3,
-)
+from openqasm3._antlr.qasm3Parser import qasm3Parser
+from openqasm3.parser import QASMNodeVisitor, _raise_from_context
+from openqasm3.parser import parse as parse_qasm3
+from openqasm3.parser import span
 from openqasm3.visitor import QASMVisitor
+
+import openpulse.ast as openpulse_ast
 
 from ._antlr.openpulseLexer import openpulseLexer
 from ._antlr.openpulseParser import openpulseParser
@@ -216,6 +214,20 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
             expression = None
         return ast.ReturnStatement(expression=expression)
 
+    @span
+    def visitLiteralExpression(self, ctx: openpulseParser.LiteralExpressionContext):
+        if ctx.waveformLiteral():
+            (wfCtx,) = list(ctx.getChildren())
+            return openpulse_ast.WaveformLiteral(
+                values=[
+                    self.visit(element)
+                    for element in wfCtx.getChildren(
+                        predicate=lambda x: isinstance(x, openpulseParser.ExpressionContext)
+                    )
+                ]
+            )
+        return QASMNodeVisitor.visitLiteralExpression(self, ctx)
+
 
 # Reuse some QASMNodeVisitor methods in OpenPulseNodeVisitor
 # The following methods are overridden in OpenPulseNodeVisitor and thus not imported:
@@ -272,7 +284,6 @@ OpenPulseNodeVisitor.visitIncludeStatement = QASMNodeVisitor.visitIncludeStateme
 OpenPulseNodeVisitor.visitIndexExpression = QASMNodeVisitor.visitIndexExpression
 OpenPulseNodeVisitor.visitIndexedIdentifier = QASMNodeVisitor.visitIndexedIdentifier
 OpenPulseNodeVisitor.visitIoDeclarationStatement = QASMNodeVisitor.visitIoDeclarationStatement
-OpenPulseNodeVisitor.visitLiteralExpression = QASMNodeVisitor.visitLiteralExpression
 OpenPulseNodeVisitor.visitLogicalAndExpression = QASMNodeVisitor.visitLogicalAndExpression
 OpenPulseNodeVisitor.visitLogicalOrExpression = QASMNodeVisitor.visitLogicalOrExpression
 OpenPulseNodeVisitor.visitMeasureArrowAssignmentStatement = (
