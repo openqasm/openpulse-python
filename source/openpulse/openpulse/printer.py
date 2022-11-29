@@ -43,6 +43,9 @@ class Printer(QASMPrinter):
     def visit_WaveformType(self, node: ast.WaveformType, context: PrinterState) -> None:
         self.stream.write("waveform")
 
+    def visit_WaveformLiteral(self, node: ast.WaveformLiteral, context: PrinterState) -> None:
+        self._visit_sequence(node.values, context, start="[", end="]", separator=", ")
+
     @_maybe_annotated
     def visit_CalibrationDefinition(
         self, node: ast.CalibrationDefinition, context: PrinterState
