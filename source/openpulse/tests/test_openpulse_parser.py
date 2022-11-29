@@ -1,41 +1,18 @@
 import dataclasses
 
 import pytest
-
-from openqasm3.visitor import QASMVisitor
-
+from openpulse.ast import (AngleType, ArrayLiteral, ArrayType,
+                           CalibrationDefinition, CalibrationStatement,
+                           ClassicalArgument, ClassicalDeclaration,
+                           ComplexType, DurationType, ExpressionStatement,
+                           ExternArgument, ExternDeclaration, FloatLiteral,
+                           FloatType, ForInLoop, FrameType, FunctionCall,
+                           Identifier, IntegerLiteral, IntType, PortType,
+                           Program, QASMNode, QuantumBarrier, RangeDefinition,
+                           ReturnStatement, UnaryExpression, UnaryOperator,
+                           WaveformLiteral, WaveformType)
 from openpulse.parser import parse
-from openpulse.ast import (
-    AngleType,
-    ArrayLiteral,
-    ArrayType,
-    CalibrationDefinition,
-    CalibrationStatement,
-    ClassicalArgument,
-    ClassicalDeclaration,
-    ComplexType,
-    DurationType,
-    ExpressionStatement,
-    ExternArgument,
-    ExternDeclaration,
-    FloatLiteral,
-    FloatType,
-    ForInLoop,
-    FunctionCall,
-    Identifier,
-    IntegerLiteral,
-    IntType,
-    Program,
-    QASMNode,
-    QuantumBarrier,
-    RangeDefinition,
-    ReturnStatement,
-    UnaryExpression,
-    UnaryOperator,
-    FrameType,
-    PortType,
-    WaveformType,
-)
+from openqasm3.visitor import QASMVisitor
 
 
 class SpanGuard(QASMVisitor):
@@ -268,6 +245,36 @@ def test_array():
     SpanGuard().visit(program)
 
 
+def test_waveform_literal():
+    p = """
+    cal {
+        waveform foo = discrete(4.0, [1.0, 2.0]);
+    }
+    """.strip()
+    program = parse(p)
+    assert _remove_spans(program) == Program(
+        statements=[
+            CalibrationStatement(
+                body=[
+                    ClassicalDeclaration(
+                        type=WaveformType(),
+                        identifier=Identifier(name="foo"),
+                        init_expression=FunctionCall(
+                            name=Identifier(name="discrete"),
+                            arguments=[
+                                FloatLiteral(4.0),
+                                WaveformLiteral(values=[FloatLiteral(1.0), FloatLiteral(2.0)]),
+                            ],
+                        ),
+                    )
+                ]
+            )
+        ]
+    )
+
+    SpanGuard().visit(program)
+
+
 @pytest.mark.parametrize(
     "p",
     [
@@ -282,6 +289,7 @@ def test_array():
             waveform rabi_pulse_wf = gaussian(1e-07, 2.5e-08, 1.0, 0.0);
             waveform readout_waveform_wf = constant(5e-06, 0.03);
             waveform readout_kernel_wf = constant(5e-06, 1.0);
+            waveform foo = [1.0, 2.0];
             for int shot in [0:499] {
                 set_scale(0.0, xy_frame);
                 for int amp in [0:50] {
