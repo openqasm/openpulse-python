@@ -216,6 +216,14 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
             expression = None
         return ast.ReturnStatement(expression=expression)
 
+    @span
+    def visitOpenpulseStatement(self, ctx: openpulseParser.OpenpulseStatementContext):
+        if ctx.pragma():
+            return self.visit(ctx.pragma())
+        out = self.visit(ctx.getChild(-1))
+        out.annotations = [self.visit(annotation) for annotation in ctx.annotation()]
+        return out
+
 
 # Reuse some QASMNodeVisitor methods in OpenPulseNodeVisitor
 # The following methods are overridden in OpenPulseNodeVisitor and thus not imported:

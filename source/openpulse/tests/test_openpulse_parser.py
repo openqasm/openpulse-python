@@ -7,6 +7,7 @@ from openqasm3.visitor import QASMVisitor
 from openpulse.parser import parse
 from openpulse.ast import (
     AngleType,
+    Annotation,
     ArrayLiteral,
     ArrayType,
     CalibrationDefinition,
@@ -25,6 +26,7 @@ from openpulse.ast import (
     Identifier,
     IntegerLiteral,
     IntType,
+    Pragma,
     Program,
     QASMNode,
     QuantumBarrier,
@@ -266,6 +268,59 @@ def test_array():
         ]
     )
     SpanGuard().visit(program)
+
+
+def test_annotation_in_cal_block():
+    p = """
+    cal {
+      @foo
+      int x = 10;
+    }
+    """
+
+    program = parse(p)
+    expected = Program(
+        statements=[
+            CalibrationStatement(
+                body=[
+                    ClassicalDeclaration(
+                        type=IntType(),
+                        identifier=Identifier("x"),
+                        init_expression=IntegerLiteral(10),
+                    )
+                ]
+            )
+        ]
+    )
+    # annotate the declaration
+    expected.statements[0].body[0].annotations = [Annotation("foo")]
+    assert _remove_spans(program) == expected
+
+
+def test_pragma_in_cal_block():
+    p = """
+    cal {
+      #pragma foo bar
+      int x = 10;
+    }
+    """
+
+    program = parse(p)
+    expected = Program(
+        statements=[
+            CalibrationStatement(
+                body=[
+                    Pragma(command="foo bar"),
+                    ClassicalDeclaration(
+                        type=IntType(),
+                        identifier=Identifier("x"),
+                        init_expression=IntegerLiteral(10),
+                    ),
+                ]
+            )
+        ]
+    )
+    assert _remove_spans(program) == expected
 
 
 @pytest.mark.parametrize(
