@@ -50,7 +50,7 @@ scalarType:
     | BOOL
     | DURATION
     | STRETCH
-    | COMPLEX LBRACKET scalarType RBRACKET
+    | COMPLEX (LBRACKET scalarType RBRACKET)?
     | WAVEFORM
     | PORT
     | FRAME
