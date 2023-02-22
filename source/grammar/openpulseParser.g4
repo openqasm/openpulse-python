@@ -39,6 +39,8 @@ openpulseStatement:
     | whileStatement
     ;
 
+waveformLiteral: LBRACKET expression (COMMA expression)* COMMA? RBRACKET;
+
 /** In the following we extend existing OpenQASM nodes. Need to refresh whenever OpenQASM is updated. **/
 // We extend the scalarType with WAVEFORM, PORT and FRAME
 scalarType:
@@ -55,3 +57,37 @@ scalarType:
     | PORT
     | FRAME
     ;
+
+expression:
+    LPAREN expression RPAREN                                  # parenthesisExpression
+    | expression indexOperator                                # indexExpression
+    | <assoc=right> expression op=DOUBLE_ASTERISK expression  # powerExpression
+    | op=(TILDE | EXCLAMATION_POINT | MINUS) expression       # unaryExpression
+    | expression op=(ASTERISK | SLASH | PERCENT) expression   # multiplicativeExpression
+    | expression op=(PLUS | MINUS) expression                 # additiveExpression
+    | expression op=BitshiftOperator expression               # bitshiftExpression
+    | expression op=ComparisonOperator expression             # comparisonExpression
+    | expression op=EqualityOperator expression               # equalityExpression
+    | expression op=AMPERSAND expression                      # bitwiseAndExpression
+    | expression op=CARET expression                          # bitwiseXorExpression
+    | expression op=PIPE expression                           # bitwiseOrExpression
+    | expression op=DOUBLE_AMPERSAND expression               # logicalAndExpression
+    | expression op=DOUBLE_PIPE expression                    # logicalOrExpression
+    | (scalarType | arrayType) LPAREN expression RPAREN       # castExpression
+    | DURATIONOF LPAREN scope RPAREN                          # durationofExpression
+    | Identifier LPAREN expressionList? RPAREN                # callExpression
+    | (
+        Identifier
+        | BinaryIntegerLiteral
+        | OctalIntegerLiteral
+        | DecimalIntegerLiteral
+        | HexIntegerLiteral
+        | FloatLiteral
+        | ImaginaryLiteral
+        | BooleanLiteral
+        | BitstringLiteral
+        | TimingLiteral
+        | HardwareQubit
+	| waveformLiteral
+      )                                                       # literalExpression
+;

@@ -1,7 +1,6 @@
 import textwrap
 
 import pytest
-
 from openpulse.parser import parse
 from openpulse.printer import dumps
 
@@ -27,6 +26,11 @@ from openpulse.printer import dumps
         """
         cal {
           waveform sx_wf = drag(0.2 + 0.1 * Im, 160.0dt, 40.0dt, 0.05);
+        }
+        """,
+        """
+        cal {
+          waveform raw_wf = [0.1 + 0.1im, 0.2];
         }
         """,
         """

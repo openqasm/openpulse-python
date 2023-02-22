@@ -14,13 +14,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+# The statement above does not import ExternArgument. Remove when it is fixed.
+# pylint: disable=unused-import
 # Re-export the existing AST classes from openqasm3
 # pylint: disable=unused-import
 from openqasm3.ast import *
-
-# The statement above does not import ExternArgument. Remove when it is fixed.
-# pylint: disable=unused-import
 from openqasm3.ast import ExternArgument
+
 
 # From Pulse grammar
 class WaveformType(ClassicalType):
@@ -39,6 +39,13 @@ class FrameType(ClassicalType):
     """
     Leaf node representing the ``frame`` type.
     """
+
+
+@dataclass
+class WaveformLiteral(Expression):
+    """A raw waveform literal, consisting of a sequence of sample values."""
+
+    values: List[Expression]
 
 
 @dataclass
