@@ -12,7 +12,7 @@ The reference abstract syntax tree (AST) for OpenPulse programs.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Union
 
 # Re-export the existing AST classes from openqasm3
 # pylint: disable=unused-import
@@ -72,7 +72,7 @@ class CalibrationStatement(Statement):
         }
     """
 
-    body: List[Statement]
+    body: List[Union[Statement, Pragma]]
 
 
 # Override the class from openqasm3

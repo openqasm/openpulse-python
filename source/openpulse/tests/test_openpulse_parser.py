@@ -1,43 +1,19 @@
 import dataclasses
 
 import pytest
-
-from openqasm3.visitor import QASMVisitor
-
+from openpulse.ast import (AngleType, Annotation, ArrayLiteral, ArrayType,
+                           AssignmentOperator, CalibrationDefinition,
+                           CalibrationStatement, ClassicalArgument,
+                           ClassicalAssignment, ClassicalDeclaration,
+                           ComplexType, DurationType, ExpressionStatement,
+                           ExternArgument, ExternDeclaration, FloatLiteral,
+                           FloatType, ForInLoop, FrameType, FunctionCall,
+                           Identifier, IntegerLiteral, IntType, PortType,
+                           Pragma, Program, QASMNode, QuantumBarrier,
+                           RangeDefinition, ReturnStatement, UnaryExpression,
+                           UnaryOperator, WaveformType)
 from openpulse.parser import parse
-from openpulse.ast import (
-    AngleType,
-    Annotation,
-    ArrayLiteral,
-    ArrayType,
-    CalibrationDefinition,
-    CalibrationStatement,
-    ClassicalArgument,
-    ClassicalDeclaration,
-    ComplexType,
-    DurationType,
-    ExpressionStatement,
-    ExternArgument,
-    ExternDeclaration,
-    FloatLiteral,
-    FloatType,
-    ForInLoop,
-    FunctionCall,
-    Identifier,
-    IntegerLiteral,
-    IntType,
-    Pragma,
-    Program,
-    QASMNode,
-    QuantumBarrier,
-    RangeDefinition,
-    ReturnStatement,
-    UnaryExpression,
-    UnaryOperator,
-    FrameType,
-    PortType,
-    WaveformType,
-)
+from openqasm3.visitor import QASMVisitor
 
 
 class SpanGuard(QASMVisitor):
@@ -273,27 +249,33 @@ def test_array():
 def test_annotation_in_cal_block():
     p = """
     cal {
-      @foo
+      @word1
       int x = 10;
+
+      @word1 command1
+      @word2 command2 32f%^&
+      x = 0;
+
+      @word1 @not_a_separate_annotation uint x;
+      z();
     }
     """
 
-    program = parse(p)
-    expected = Program(
-        statements=[
-            CalibrationStatement(
-                body=[
-                    ClassicalDeclaration(
-                        type=IntType(),
-                        identifier=Identifier("x"),
-                        init_expression=IntegerLiteral(10),
-                    )
-                ]
-            )
-        ]
+    xdecl = ClassicalDeclaration(
+        type=IntType(),
+        identifier=Identifier("x"),
+        init_expression=IntegerLiteral(10),
     )
-    # annotate the declaration
-    expected.statements[0].body[0].annotations = [Annotation("foo")]
+    xdecl.annotations = [Annotation("word1")]
+
+    xassign = ClassicalAssignment(Identifier("x"), AssignmentOperator["="], IntegerLiteral(0))
+    xassign.annotations = [Annotation("word1", "command1"), Annotation("word2", "command2 32f%^&")]
+
+    zcall = ExpressionStatement(FunctionCall(Identifier("z"), []))
+    zcall.annotations = [Annotation("word1", "@not_a_separate_annotation uint x;")]
+    program = parse(p)
+    expected = Program(statements=[CalibrationStatement(body=[xdecl, xassign, zcall])])
+
     assert _remove_spans(program) == expected
 
 
