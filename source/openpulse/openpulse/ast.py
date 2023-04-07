@@ -22,6 +22,7 @@ from openqasm3.ast import *
 # pylint: disable=unused-import
 from openqasm3.ast import ExternArgument
 
+
 # From Pulse grammar
 class WaveformType(ClassicalType):
     """

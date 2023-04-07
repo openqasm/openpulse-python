@@ -1,17 +1,41 @@
 import dataclasses
 
 import pytest
-from openpulse.ast import (AngleType, Annotation, ArrayLiteral, ArrayType,
-                           AssignmentOperator, CalibrationDefinition,
-                           CalibrationStatement, ClassicalArgument,
-                           ClassicalAssignment, ClassicalDeclaration,
-                           ComplexType, DurationType, ExpressionStatement,
-                           ExternArgument, ExternDeclaration, FloatLiteral,
-                           FloatType, ForInLoop, FrameType, FunctionCall,
-                           Identifier, IntegerLiteral, IntType, PortType,
-                           Pragma, Program, QASMNode, QuantumBarrier,
-                           RangeDefinition, ReturnStatement, UnaryExpression,
-                           UnaryOperator, WaveformType)
+from openpulse.ast import (
+    AngleType,
+    Annotation,
+    ArrayLiteral,
+    ArrayType,
+    AssignmentOperator,
+    CalibrationDefinition,
+    CalibrationStatement,
+    ClassicalArgument,
+    ClassicalAssignment,
+    ClassicalDeclaration,
+    ComplexType,
+    DurationType,
+    ExpressionStatement,
+    ExternArgument,
+    ExternDeclaration,
+    FloatLiteral,
+    FloatType,
+    ForInLoop,
+    FrameType,
+    FunctionCall,
+    Identifier,
+    IntegerLiteral,
+    IntType,
+    PortType,
+    Pragma,
+    Program,
+    QASMNode,
+    QuantumBarrier,
+    RangeDefinition,
+    ReturnStatement,
+    UnaryExpression,
+    UnaryOperator,
+    WaveformType,
+)
 from openpulse.parser import parse
 from openqasm3.visitor import QASMVisitor
 
