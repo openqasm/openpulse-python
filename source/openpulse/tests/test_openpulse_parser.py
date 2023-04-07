@@ -1,17 +1,16 @@
 import dataclasses
 
 import pytest
-
-from openqasm3.visitor import QASMVisitor
-
-from openpulse.parser import parse
 from openpulse.ast import (
     AngleType,
+    Annotation,
     ArrayLiteral,
     ArrayType,
+    AssignmentOperator,
     CalibrationDefinition,
     CalibrationStatement,
     ClassicalArgument,
+    ClassicalAssignment,
     ClassicalDeclaration,
     ComplexType,
     DurationType,
@@ -21,10 +20,13 @@ from openpulse.ast import (
     FloatLiteral,
     FloatType,
     ForInLoop,
+    FrameType,
     FunctionCall,
     Identifier,
     IntegerLiteral,
     IntType,
+    PortType,
+    Pragma,
     Program,
     QASMNode,
     QuantumBarrier,
@@ -32,10 +34,10 @@ from openpulse.ast import (
     ReturnStatement,
     UnaryExpression,
     UnaryOperator,
-    FrameType,
-    PortType,
     WaveformType,
 )
+from openpulse.parser import parse
+from openqasm3.visitor import QASMVisitor
 
 
 class SpanGuard(QASMVisitor):
@@ -266,6 +268,65 @@ def test_array():
         ]
     )
     SpanGuard().visit(program)
+
+
+def test_annotation_in_cal_block():
+    p = """
+    cal {
+      @word1
+      int x = 10;
+
+      @word1 command1
+      @word2 command2 32f%^&
+      x = 0;
+
+      @word1 @not_a_separate_annotation uint x;
+      z();
+    }
+    """
+
+    xdecl = ClassicalDeclaration(
+        type=IntType(),
+        identifier=Identifier("x"),
+        init_expression=IntegerLiteral(10),
+    )
+    xdecl.annotations = [Annotation("word1")]
+
+    xassign = ClassicalAssignment(Identifier("x"), AssignmentOperator["="], IntegerLiteral(0))
+    xassign.annotations = [Annotation("word1", "command1"), Annotation("word2", "command2 32f%^&")]
+
+    zcall = ExpressionStatement(FunctionCall(Identifier("z"), []))
+    zcall.annotations = [Annotation("word1", "@not_a_separate_annotation uint x;")]
+    program = parse(p)
+    expected = Program(statements=[CalibrationStatement(body=[xdecl, xassign, zcall])])
+
+    assert _remove_spans(program) == expected
+
+
+def test_pragma_in_cal_block():
+    p = """
+    cal {
+      #pragma foo bar
+      int x = 10;
+    }
+    """
+
+    program = parse(p)
+    expected = Program(
+        statements=[
+            CalibrationStatement(
+                body=[
+                    Pragma(command="foo bar"),
+                    ClassicalDeclaration(
+                        type=IntType(),
+                        identifier=Identifier("x"),
+                        init_expression=IntegerLiteral(10),
+                    ),
+                ]
+            )
+        ]
+    )
+    assert _remove_spans(program) == expected
 
 
 @pytest.mark.parametrize(

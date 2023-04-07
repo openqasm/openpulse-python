@@ -12,7 +12,7 @@ The reference abstract syntax tree (AST) for OpenPulse programs.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Union
 
 # Re-export the existing AST classes from openqasm3
 # pylint: disable=unused-import
@@ -21,6 +21,7 @@ from openqasm3.ast import *
 # The statement above does not import ExternArgument. Remove when it is fixed.
 # pylint: disable=unused-import
 from openqasm3.ast import ExternArgument
+
 
 # From Pulse grammar
 class WaveformType(ClassicalType):
@@ -72,7 +73,7 @@ class CalibrationStatement(Statement):
         }
     """
 
-    body: List[Statement]
+    body: List[Union[Statement, Pragma]]
 
 
 # Override the class from openqasm3
