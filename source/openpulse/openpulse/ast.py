@@ -24,18 +24,21 @@ from openqasm3.ast import ExternArgument
 
 
 # From Pulse grammar
+@dataclass
 class WaveformType(ClassicalType):
     """
     Leaf node representing the ``waveform`` type.
     """
 
 
+@dataclass
 class PortType(ClassicalType):
     """
     Leaf node representing the ``port`` type.
     """
 
 
+@dataclass
 class FrameType(ClassicalType):
     """
     Leaf node representing the ``frame`` type.
