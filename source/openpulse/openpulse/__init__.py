@@ -14,6 +14,13 @@ With the ``[parser]`` extra installed, the simplest interface to the parser is
 the :obj:`~parser.parse` function.
 """
 
+__all__ = [
+    "ast",
+    "parser",
+    "spec",
+    "parse",
+]
+
 __version__ = "0.5.0"
 
 from . import ast, parser, spec
