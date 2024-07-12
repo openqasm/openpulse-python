@@ -16,5 +16,5 @@ the :obj:`~parser.parse` function.
 
 __version__ = "0.5.0"
 
-from . import ast, parser
+from . import ast, parser, spec
 from .parser import parse
