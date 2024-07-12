@@ -30,6 +30,18 @@ from openpulse.printer import dumps
         }
         """,
         """
+        cal {
+          switch (x) {
+            case 1, 2 {
+            }
+            case 3 {
+            }
+            default {
+            }
+          }
+        }
+        """,
+        """
         defcal rz(angle[20] theta) q {
           return shift_phase(drive(q), -theta);
         }
@@ -41,6 +53,18 @@ from openpulse.printer import dumps
         """
         defcal x90 q {
           set_phase(frame1, 0.22 * 2 * pi);
+        }
+        """,
+        """
+        defcal x q {
+          switch (x) {
+            case 1, 2 {
+            }
+            case 3 {
+            }
+            default {
+            }
+          }
         }
         """,
         """
@@ -78,6 +102,16 @@ from openpulse.printer import dumps
         """
         def my_subroutine(int[32] i, qubit q) -> bit {
           return measure q;
+        }
+        """,
+        """
+        switch (x) {
+          case 1, 2 {
+          }
+          case 3 {
+          }
+          default {
+          }
         }
         """,
         "extern my_extern(float[32], duration) -> duration;",
