@@ -312,6 +312,7 @@ OpenPulseNodeVisitor.visitStatement = QASMNodeVisitor.visitStatement
 OpenPulseNodeVisitor.visitStatementOrScope = QASMNodeVisitor.visitStatementOrScope
 OpenPulseNodeVisitor.visitUnaryExpression = QASMNodeVisitor.visitUnaryExpression
 OpenPulseNodeVisitor.visitWhileStatement = QASMNodeVisitor.visitWhileStatement
+OpenPulseNodeVisitor.visitSwitchStatement = QASMNodeVisitor.visitSwitchStatement
 
 
 class CalParser(QASMVisitor[None]):
