@@ -51,9 +51,11 @@ from ._antlr.openpulseLexer import openpulseLexer
 from ._antlr.openpulseParser import openpulseParser
 from ._antlr.openpulseParserVisitor import openpulseParserVisitor
 
+
 class OpenPulseParsingError(Exception):
     """An error raised by the AST visitor during the AST-generation phase.  This is raised in cases where the
     given program could not be correctly parsed."""
+
 
 def parse(input_: str, permissive: bool = False) -> ast.Program:
     """
@@ -71,7 +73,9 @@ def parse(input_: str, permissive: bool = False) -> ast.Program:
     return qasm3_ast
 
 
-def parse_openpulse(input_: str, in_defcal: bool, permissive: bool = True) -> openpulse_ast.CalibrationBlock:
+def parse_openpulse(
+    input_: str, in_defcal: bool, permissive: bool = True
+) -> openpulse_ast.CalibrationBlock:
     lexer = openpulseLexer(InputStream(input_))
     stream = CommonTokenStream(lexer)
     parser = openpulseParser(stream)
