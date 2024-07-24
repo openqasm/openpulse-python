@@ -35,7 +35,7 @@ except ImportError as exc:
     ) from exc
 
 import openpulse.ast as openpulse_ast
-from openqasm3._antlr.qasm3Parser import qasm3Parser
+from openqasm3._antlr.qasm3Parser import qasm3Parser  # pylint: disable=import-error
 from openqasm3 import ast
 from openqasm3.parser import (
     span,
