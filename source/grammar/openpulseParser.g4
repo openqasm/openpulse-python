@@ -38,6 +38,7 @@ openpulseStatement:
         | quantumDeclarationStatement
         | resetStatement
         | returnStatement
+        | switchStatement
         | whileStatement
     )
 ;

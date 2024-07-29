@@ -4,7 +4,7 @@ options {
     tokenVocab = qasm3Lexer;
 }
 
-program: version? statement* EOF;
+program: version? statementOrScope* EOF;
 version: OPENQASM VersionSpecifier SEMICOLON;
 
 // A statement is any valid single statement of an OpenQASM 3 program, with the
@@ -43,11 +43,12 @@ statement:
         | quantumDeclarationStatement
         | resetStatement
         | returnStatement
+        | switchStatement
         | whileStatement
     )
 ;
 annotation: AnnotationKeyword RemainingLineContent?;
-scope: LBRACE statement* RBRACE;
+scope: LBRACE statementOrScope* RBRACE;
 pragma: PRAGMA RemainingLineContent;
 
 statementOrScope: statement | scope;
@@ -67,6 +68,11 @@ forStatement: FOR scalarType Identifier IN (setExpression | LBRACKET rangeExpres
 ifStatement: IF LPAREN expression RPAREN if_body=statementOrScope (ELSE else_body=statementOrScope)?;
 returnStatement: RETURN (expression | measureExpression)? SEMICOLON;
 whileStatement: WHILE LPAREN expression RPAREN body=statementOrScope;
+switchStatement: SWITCH LPAREN expression RPAREN LBRACE switchCaseItem* RBRACE;
+switchCaseItem:
+    CASE expressionList scope
+    | DEFAULT scope
+;
 
 // Quantum directive statements.
 barrierStatement: BARRIER gateOperandList? SEMICOLON;

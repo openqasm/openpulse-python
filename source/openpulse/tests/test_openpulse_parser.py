@@ -13,6 +13,7 @@ from openpulse.ast import (
     ClassicalAssignment,
     ClassicalDeclaration,
     ComplexType,
+    CompoundStatement,
     DurationType,
     ExpressionStatement,
     ExternArgument,
@@ -32,6 +33,7 @@ from openpulse.ast import (
     QuantumBarrier,
     RangeDefinition,
     ReturnStatement,
+    SwitchStatement,
     UnaryExpression,
     UnaryOperator,
     WaveformType,
@@ -322,6 +324,43 @@ def test_pragma_in_cal_block():
                         identifier=Identifier("x"),
                         init_expression=IntegerLiteral(10),
                     ),
+                ]
+            )
+        ]
+    )
+    assert _remove_spans(program) == expected
+
+
+def test_switch_in_cal_block():
+    p = """
+    cal {
+      switch (x) {
+        case 1, 2 {}
+        case 3 {}
+        default {}
+      }
+    }
+    """
+
+    program = parse(p)
+    expected = Program(
+        statements=[
+            CalibrationStatement(
+                body=[
+                    SwitchStatement(
+                        target=Identifier(name="x"),
+                        cases=[
+                            (
+                                [IntegerLiteral(value=1), IntegerLiteral(value=2)],
+                                CompoundStatement(statements=[]),
+                            ),
+                            (
+                                [IntegerLiteral(value=3)],
+                                CompoundStatement(statements=[]),
+                            ),
+                        ],
+                        default=CompoundStatement(statements=[]),
+                    )
                 ]
             )
         ]

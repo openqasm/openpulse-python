@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 from contextlib import contextmanager
-from typing import List
+from typing import List, Union
 
 try:
     from antlr4 import CommonTokenStream, InputStream, ParserRuleContext
@@ -128,6 +128,13 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
             )
             for scope in reversed(self._current_context())
         )
+
+    def _parse_scoped_statements(
+        self, node: Union[qasm3Parser.ScopeContext, qasm3Parser.StatementOrScopeContext]
+    ) -> List[ast.Statement]:
+        with self._push_scope(node.parentCtx):
+            block = self.visit(node)
+            return block.statements if isinstance(block, ast.CompoundStatement) else [block]
 
     @span
     def _visitPulseType(self, ctx: openpulseParser.ScalarTypeContext):
@@ -305,6 +312,7 @@ OpenPulseNodeVisitor.visitStatement = QASMNodeVisitor.visitStatement
 OpenPulseNodeVisitor.visitStatementOrScope = QASMNodeVisitor.visitStatementOrScope
 OpenPulseNodeVisitor.visitUnaryExpression = QASMNodeVisitor.visitUnaryExpression
 OpenPulseNodeVisitor.visitWhileStatement = QASMNodeVisitor.visitWhileStatement
+OpenPulseNodeVisitor.visitSwitchStatement = QASMNodeVisitor.visitSwitchStatement
 
 
 class CalParser(QASMVisitor[None]):
