@@ -18,10 +18,6 @@ from typing import List, Optional, Union
 # pylint: disable=unused-import
 from openqasm3.ast import *
 
-# The statement above does not import ExternArgument. Remove when it is fixed.
-# pylint: disable=unused-import
-from openqasm3.ast import ExternArgument
-
 
 # From Pulse grammar
 @dataclass
