@@ -337,7 +337,7 @@ OpenPulseNodeVisitor.visitSwitchStatement = QASMNodeVisitor.visitSwitchStatement
 
 
 class CalParser(QASMVisitor[None]):
-    """Visit OpenQASM3 AST and pase calibration
+    """Visit OpenQASM3 AST and parse calibration
 
     Attributes:
       permissive: should OpenPulse parsing be permissive? If True, ANTLR
