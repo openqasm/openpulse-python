@@ -27,7 +27,9 @@ from contextlib import contextmanager
 from typing import List, Union
 
 try:
-    from antlr4 import CommonTokenStream, InputStream, ParserRuleContext
+    from antlr4 import CommonTokenStream, InputStream, ParserRuleContext, RecognitionException
+    from antlr4.error.Errors import ParseCancellationException
+    from antlr4.error.ErrorStrategy import BailErrorStrategy
 except ImportError as exc:
     raise ImportError(
         "Parsing is not available unless the [parser] extra is installed,"
@@ -50,23 +52,42 @@ from ._antlr.openpulseParser import openpulseParser
 from ._antlr.openpulseParserVisitor import openpulseParserVisitor
 
 
-def parse(input_: str) -> ast.Program:
+class OpenPulseParsingError(Exception):
+    """An error raised by the AST visitor during the AST-generation phase.  This is raised in cases where the
+    given program could not be correctly parsed."""
+
+
+def parse(input_: str, permissive: bool = False) -> ast.Program:
     """
     Parse a complete OpenPulse program from a string.
 
     :param input_: A string containing a complete OpenQASM 3 program.
+    :param permissive: A Boolean controlling whether ANTLR should attempt to
+        recover from incorrect input or not.  Defaults to ``False``; if set to
+        ``True``, the reference AST produced may be invalid if ANTLR emits any
+        warning messages during its parsing phase.
     :return: A complete :obj:`~ast.Program` node.
     """
-    qasm3_ast = parse_qasm3(input_)
-    CalParser().visit(qasm3_ast)
+    qasm3_ast = parse_qasm3(input_, permissive=permissive)
+    CalParser(permissive=permissive).visit(qasm3_ast)
     return qasm3_ast
 
 
-def parse_openpulse(input_: str, in_defcal: bool) -> openpulse_ast.CalibrationBlock:
+def parse_openpulse(
+    input_: str, in_defcal: bool, permissive: bool = True
+) -> openpulse_ast.CalibrationBlock:
     lexer = openpulseLexer(InputStream(input_))
     stream = CommonTokenStream(lexer)
     parser = openpulseParser(stream)
-    tree = parser.calibrationBlock()
+    if not permissive:
+        # For some reason, the Python 3 runtime for ANTLR 4 is missing the
+        # setter method `setErrorHandler`, so we have to set the attribute
+        # directly.
+        parser._errHandler = BailErrorStrategy()
+    try:
+        tree = parser.calibrationBlock()
+    except (RecognitionException, ParseCancellationException) as exc:
+        raise OpenPulseParsingError() from exc
     result = (
         OpenPulseNodeVisitor(in_defcal).visitCalibrationBlock(tree)
         if tree.children
@@ -316,16 +337,24 @@ OpenPulseNodeVisitor.visitSwitchStatement = QASMNodeVisitor.visitSwitchStatement
 
 
 class CalParser(QASMVisitor[None]):
-    """Visit OpenQASM3 AST and pase calibration"""
+    """Visit OpenQASM3 AST and parse calibration
+
+    Attributes:
+      permissive: should OpenPulse parsing be permissive? If True, ANTLR
+        will attempt error recovery (although parsing may still fail elsewhere).
+    """
+
+    def __init__(self, permissive: bool = False):
+        self.permissive = permissive
 
     def visit_CalibrationDefinition(
         self, node: ast.CalibrationDefinition
     ) -> openpulse_ast.CalibrationDefinition:
         node.__class__ = openpulse_ast.CalibrationDefinition
-        node.body = parse_openpulse(node.body, in_defcal=True).body
+        node.body = parse_openpulse(node.body, in_defcal=True, permissive=self.permissive).body
 
     def visit_CalibrationStatement(
         self, node: ast.CalibrationStatement
     ) -> openpulse_ast.CalibrationStatement:
         node.__class__ = openpulse_ast.CalibrationStatement
-        node.body = parse_openpulse(node.body, in_defcal=False).body
+        node.body = parse_openpulse(node.body, in_defcal=False, permissive=self.permissive).body

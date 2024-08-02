@@ -38,7 +38,7 @@ from openpulse.ast import (
     UnaryOperator,
     WaveformType,
 )
-from openpulse.parser import parse
+from openpulse.parser import parse, OpenPulseParsingError
 from openqasm3.visitor import QASMVisitor
 
 
@@ -366,6 +366,29 @@ def test_switch_in_cal_block():
         ]
     )
     assert _remove_spans(program) == expected
+
+
+def test_permissive_parsing(capsys):
+    p = """
+    cal {
+      int;
+    }
+    """
+
+    with pytest.raises(AttributeError, match=r"'NoneType' object has no attribute 'line'"):
+        # In this case, we do get an exception, but this is somewhat incidental --
+        # the antlr parser gives us a `None` value where we expect a `Statement`
+        parse(p, permissive=True)
+    # The actual ANTLR failure is reported via stderr
+    captured = capsys.readouterr()
+    assert captured.err.strip() == "line 2:9 no viable alternative at input 'int;'"
+
+    with pytest.raises(OpenPulseParsingError):
+        # This is stricter -- we fail as soon as ANTLR sees a problem
+        parse(p)
+    captured = capsys.readouterr()
+    # The actual ANTLR failure is reported via stderr
+    assert captured.err.strip() == "line 2:9 no viable alternative at input 'int;'"
 
 
 @pytest.mark.parametrize(
