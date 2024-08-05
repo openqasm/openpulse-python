@@ -383,7 +383,7 @@ def test_permissive_parsing(capsys):
     captured = capsys.readouterr()
     assert captured.err.strip() == "line 2:9 no viable alternative at input 'int;'"
 
-    with pytest.raises(OpenPulseParsingError):
+    with pytest.raises(OpenPulseParsingError, match=r"Unexpected token ';' at line 2, column 10."):
         # This is stricter -- we fail as soon as ANTLR sees a problem
         parse(p)
     captured = capsys.readouterr()

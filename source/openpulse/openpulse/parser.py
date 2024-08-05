@@ -87,7 +87,14 @@ def parse_openpulse(
     try:
         tree = parser.calibrationBlock()
     except (RecognitionException, ParseCancellationException) as exc:
-        raise OpenPulseParsingError() from exc
+        msg = ""
+        # With BailErrorStrategy, we should be able to recover and report
+        # information about the offending token.
+        if isinstance(exc, ParseCancellationException) and exc.args:
+            tok = getattr(exc.args[0], "offendingToken", None)
+            if tok is not None:
+                msg = f"Unexpected token '{tok.text}' at line {tok.line}, column {tok.start}."
+        raise OpenPulseParsingError(msg) from exc
     result = (
         OpenPulseNodeVisitor(in_defcal).visitCalibrationBlock(tree)
         if tree.children
