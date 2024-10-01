@@ -21,7 +21,7 @@ __all__ = [
     "parse",
 ]
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 from . import ast, parser, spec
 from .parser import parse
