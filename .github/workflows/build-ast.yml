@@ -75,13 +75,13 @@ jobs:
       - name: Build package
         run: python -m build --wheel --sdist .
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: openpulse-python-wheel
           path: ./source/openpulse/dist/*.whl
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: openpulse-python-sdist
           path: ./source/openpulse/dist/*.tar.gz
