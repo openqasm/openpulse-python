@@ -131,6 +131,15 @@ class CalibrationBlock(QASMNode):
     body: List[Statement]
 
 
+@dataclass
+class ExternPortStatement(QASMNode):
+    """
+    Node representing an extern port statement.
+    """
+
+    name: Identifier
+
+
 # Override the class from openqasm3
 @dataclass
 class CalibrationStatement(Statement):
