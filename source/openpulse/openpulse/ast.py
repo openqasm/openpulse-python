@@ -132,6 +132,15 @@ class CalibrationBlock(QASMNode):
 
 
 @dataclass
+class ExternFrameStatement(QASMNode):
+    """
+    Node representing an extern frame statement.
+    """
+
+    name: Identifier
+
+
+@dataclass
 class ExternPortStatement(QASMNode):
     """
     Node representing an extern port statement.

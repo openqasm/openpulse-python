@@ -195,6 +195,9 @@ class OpenPulseNodeVisitor(openpulseParserVisitor):
                 body=[self.visit(statement) for statement in ctx.openpulseStatement()]
             )
 
+    def visitExternFrameStatement(self, ctx: openpulseParser.OpenpulseStatementContext):
+        return openpulse_ast.ExternFrameStatement(name=_visit_identifier(ctx.Identifier()))
+
     def visitExternPortStatement(self, ctx: openpulseParser.OpenpulseStatementContext):
         return openpulse_ast.ExternPortStatement(name=_visit_identifier(ctx.Identifier()))
 
