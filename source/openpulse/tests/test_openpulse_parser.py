@@ -399,6 +399,7 @@ def test_permissive_parsing(capsys):
             port xy_port;
             port tx_port;
             port rx_port;
+            extern port cx_port;
             frame xy_frame = newframe(xy_port, 3714500000.0, 0);
             frame tx_frame = newframe(tx_port, 7883050000.0, 0);
             frame rx_frame = newframe(rx_port, 7883050000.0, 0);
