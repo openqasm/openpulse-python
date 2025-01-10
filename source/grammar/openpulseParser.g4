@@ -30,6 +30,7 @@ openpulseStatement:
         | endStatement
         | expressionStatement
         | externStatement
+        | externPortStatement
         | forStatement
         | gateCallStatement
         | ifStatement
@@ -59,3 +60,6 @@ scalarType:
     | PORT
     | FRAME
     ;
+
+
+externPortStatement: EXTERN PORT Identifier SEMICOLON;
