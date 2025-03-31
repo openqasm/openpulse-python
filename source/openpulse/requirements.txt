@@ -1,2 +1,2 @@
 antlr4-python3-runtime
-openqasm3>=1.0.0,<2.0
+openqasm3>=1.0.1,<2.0
