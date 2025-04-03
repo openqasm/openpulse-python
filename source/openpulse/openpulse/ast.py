@@ -41,6 +41,7 @@ from openqasm3.ast import (
     ClassicalAssignment,
     ClassicalDeclaration,
     ClassicalType,
+    ComplexLiteral,
     ComplexType,
     Concatenation,
     ConstantDeclaration,
