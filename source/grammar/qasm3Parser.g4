@@ -39,6 +39,7 @@ statement:
         | includeStatement
         | ioDeclarationStatement
         | measureArrowAssignmentStatement
+        | nopStatement
         | oldStyleDeclarationStatement
         | quantumDeclarationStatement
         | resetStatement
@@ -66,7 +67,7 @@ continueStatement: CONTINUE SEMICOLON;
 endStatement: END SEMICOLON;
 forStatement: FOR scalarType Identifier IN (setExpression | LBRACKET rangeExpression RBRACKET | expression) body=statementOrScope;
 ifStatement: IF LPAREN expression RPAREN if_body=statementOrScope (ELSE else_body=statementOrScope)?;
-returnStatement: RETURN (expression | measureExpression)? SEMICOLON;
+returnStatement: RETURN (expression | measureExpression | quantumCallExpression)? SEMICOLON;
 whileStatement: WHILE LPAREN expression RPAREN body=statementOrScope;
 switchStatement: SWITCH LPAREN expression RPAREN LBRACE switchCaseItem* RBRACE;
 switchCaseItem:
@@ -78,6 +79,7 @@ switchCaseItem:
 barrierStatement: BARRIER gateOperandList? SEMICOLON;
 boxStatement: BOX designator? scope;
 delayStatement: DELAY designator gateOperandList? SEMICOLON;
+nopStatement: NOP gateOperandList? SEMICOLON;
 /* `gateCallStatement`  is split in two to avoid a potential ambiguity with an
  * `expressionStatement` that consists of a single function call.  The only
  * "gate" that can have no operands is `gphase` with no control modifiers, and
@@ -92,7 +94,7 @@ gateCallStatement:
 ;
 // measureArrowAssignmentStatement also permits the case of not assigning the
 // result to any classical value too.
-measureArrowAssignmentStatement: measureExpression (ARROW indexedIdentifier)? SEMICOLON;
+measureArrowAssignmentStatement: (measureExpression | quantumCallExpression) (ARROW indexedIdentifier)? SEMICOLON;
 resetStatement: RESET gateOperand SEMICOLON;
 
 // Primitive declaration statements.
@@ -109,7 +111,7 @@ externStatement: EXTERN Identifier LPAREN externArgumentList? RPAREN returnSigna
 gateStatement: GATE Identifier (LPAREN params=identifierList? RPAREN)? qubits=identifierList scope;
 
 // Non-declaration assignments and calculations.
-assignmentStatement: indexedIdentifier op=(EQUALS | CompoundAssignmentOperator) (expression | measureExpression) SEMICOLON;
+assignmentStatement: indexedIdentifier op=(EQUALS | CompoundAssignmentOperator) (expression | measureExpression | quantumCallExpression) SEMICOLON;
 expressionStatement: expression SEMICOLON;
 
 // Statements where the bulk is in the calibration language.
@@ -160,11 +162,12 @@ expression:
 // Special-case expressions that are only valid in certain contexts.  These are
 // not in the expression tree, but can contain elements that are within it.
 aliasExpression: expression (DOUBLE_PLUS expression)*;
-declarationExpression: arrayLiteral | expression | measureExpression;
+declarationExpression: arrayLiteral | expression | measureExpression | quantumCallExpression;
 measureExpression: MEASURE gateOperand;
+quantumCallExpression: Identifier (LPAREN expressionList? RPAREN)? gateOperandList;
 rangeExpression: expression? COLON expression? (COLON expression)?;
 setExpression: LBRACE expression (COMMA expression)* COMMA? RBRACE;
-arrayLiteral: LBRACE (expression | arrayLiteral) (COMMA (expression | arrayLiteral))* COMMA? RBRACE;
+arrayLiteral: LBRACE ((expression | arrayLiteral) (COMMA (expression | arrayLiteral))* COMMA?)? RBRACE;
 
 // The general form is a comma-separated list of indexing entities.
 // `setExpression` is only valid when being used as a single index: registers
